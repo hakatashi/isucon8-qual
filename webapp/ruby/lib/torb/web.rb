@@ -494,7 +494,7 @@ module Torb
       DATE_FORMAT(r.reserved_at, '%Y-%m-%dT%TZ') AS sold_at,
       IFNULL(DATE_FORMAT(r.canceled_at, '%Y-%m-%dT%TZ'), '') AS canceled_at
       INTO OUTFILE '/usr/share/nginx/html/csv/#{prefix}.csv' FIELDS TERMINATED BY ','
-      FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY id ASC LOCK IN SHARE MODE)
+      FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY r.id ASC LOCK IN SHARE MODE)
       SQL
       db.xquery(sql, event['id'])
       redirect "http://127.0.0.1/csv/#{prefix}.csv", 307
