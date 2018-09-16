@@ -42,12 +42,13 @@ CREATE TABLE IF NOT EXISTS reservations (
     user_id     INTEGER UNSIGNED NOT NULL,
     reserved_at DATETIME(6)      PRIMARY KEY NOT NULL,
     canceled_at DATETIME(6)      DEFAULT NULL,
+    updated_at  DATETIME(6)      DEFAULT NULL,
     KEY event_id_and_sheet_id_idx (event_id, sheet_id),
     UNIQUE INDEX `id_idx` (id),
     INDEX `sheet_id_idx` (sheet_id),
-    INDEX `canceled_at_idx` (canceled_at)
-)
-ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    INDEX `canceled_at_idx` (canceled_at),
+    INDEX `updated_at_idx` (updated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS administrators (
     id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,

@@ -18,3 +18,4 @@ fi
 mysql -uisucon -h 172.17.147.2 torb -e 'ALTER TABLE reservations DROP KEY event_id_and_sheet_id_idx'
 gzip -dc "$DB_DIR/isucon8q-initial-dataset.sql.gz" | mysql -uisucon -h 172.17.147.2 torb
 mysql -uisucon -h 172.17.147.2 torb -e 'ALTER TABLE reservations ADD KEY event_id_and_sheet_id_idx (event_id, sheet_id)'
+mysql -uisucon -h 172.17.147.2 torb -e 'UPDATE reservations SET updated_at = IFNULL(canceled_at, reserved_at)'
