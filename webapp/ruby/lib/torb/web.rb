@@ -74,9 +74,52 @@ module Torb
 
         db.query('BEGIN')
         begin
-          event_ids = db.query('SELECT * FROM events ORDER BY id ASC').select(&where).map { |e| e['id'] }
-          events = event_ids.map do |event_id|
-            event = get_event(event_id)
+          events = db.query('SELECT * FROM events ORDER BY id ASC').select(&where)
+          event_data = events.map do |event|
+            event['total']   = 0
+            event['remains'] = 0
+            event['sheets'] = {}
+            %w[S A B C].each do |rank|
+              event['sheets'][rank] = { 'total' => 0, 'remains' => 0, 'detail' => [] }
+            end
+
+            sql = <<-SQL
+              SELECT *
+              FROM sheetstates
+              WHERE event_id = ?
+            SQL
+            states = db.xquery(sql, event['id']).to_a
+            SHEETS.each_with_index do |sheet_data, index|
+              sheet_id = index + 1
+              sheet = {
+                'price' => PRICES[sheet_data[:rank]],
+                'rank' => sheet_data[:rank],
+                'num' => sheet_data[:num],
+              }
+              event['sheets'][sheet['rank']]['price'] ||= event['price'] + sheet['price']
+              event['total'] += 1
+              event['sheets'][sheet['rank']]['total'] += 1
+
+              state = states.detect { |r| r['sheet_id'] == sheet_id }
+              if state
+                sheet['mine']        = true if login_user_id && state['user_id'] == login_user_id
+                sheet['reserved']    = true
+                sheet['reserved_at'] = state['reserved_at'].to_i
+              else
+                event['remains'] += 1
+                event['sheets'][sheet['rank']]['remains'] += 1
+              end
+
+              event['sheets'][sheet['rank']]['detail'].push(sheet)
+
+              sheet.delete('id')
+              sheet.delete('price')
+              sheet.delete('rank')
+            end
+
+            event['public'] = event.delete('public_fg')
+            event['closed'] = event.delete('closed_fg')
+
             event['sheets'].each { |sheet| sheet.delete('detail') }
             event
           end
@@ -85,7 +128,7 @@ module Torb
           db.query('ROLLBACK')
         end
 
-        events
+        event_data
       end
 
       def get_event(event_id, login_user_id = nil)
