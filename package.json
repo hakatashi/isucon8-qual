@@ -1,0 +1,22 @@
+{
+  "name": "isucon8-qual",
+  "version": "1.0.0",
+  "description": "",
+  "main": "temp.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hakatashi/isucon8-qual.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hakatashi/isucon8-qual/issues"
+  },
+  "homepage": "https://github.com/hakatashi/isucon8-qual#readme",
+  "dependencies": {
+    "mysql": "^2.16.0"
+  }
+}
