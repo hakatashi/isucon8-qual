@@ -359,7 +359,6 @@ module Torb
             ) VALUES (?, ?, ?, ?)
           SQL
           db.xquery(sql, event['id'], sheet['id'], user['id'], now)
-          reservation_id = db.last_id
           db.query('COMMIT')
         rescue => e
           db.query('ROLLBACK')
