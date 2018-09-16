@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS sheets (
     num         INTEGER UNSIGNED NOT NULL,
     price       INTEGER UNSIGNED NOT NULL,
     UNIQUE KEY rank_num_uniq (`rank`, num),
-    INDEX(`rank`)
+    INDEX `rank_idx` (`rank`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS reservations (
@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS reservations (
     reserved_at DATETIME(6)      NOT NULL,
     canceled_at DATETIME(6)      DEFAULT NULL,
     KEY event_id_and_sheet_id_idx (event_id, sheet_id),
-    INDEX(sheet_id, canceled_at)
+    INDEX `sheet_id_idx` (sheet_id),
+    INDEX `canceled_at_idx` (canceled_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS administrators (
