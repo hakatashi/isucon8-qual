@@ -110,7 +110,7 @@ module Torb
         SHEETS.each_with_index do |sheet_data, index|
           sheet_id = index + 1
           sheet = {
-            'price' => PRICES[rank],
+            'price' => PRICES[sheet_data[:rank]],
             'rank' => sheet_data[:rank],
             'num' => sheet_data[:num],
           }
