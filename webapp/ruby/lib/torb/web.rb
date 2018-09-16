@@ -530,7 +530,7 @@ module Torb
         }
       end
 =end
-      redirect 'http://118.27.29.167/#{prefix}.csv'
+      redirect "http://118.27.29.167/csv/#{prefix}.csv"
       #render_report_csv(reports)
     end
   end
