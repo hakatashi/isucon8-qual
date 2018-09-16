@@ -125,7 +125,7 @@ module Torb
           event['sheets'][sheet['rank']]['total'] += 1
 
           reservation = reservations.detect { |r| r['sheet_id'] == sheet_id }
-          if event['id'] === 11 && sheet_id == 502
+          if event['id'] == 11 && sheet_id > 502
             p reservations, sheet_id, reservation
           end
           if reservation
