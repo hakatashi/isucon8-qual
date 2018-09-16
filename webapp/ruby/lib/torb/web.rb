@@ -237,19 +237,36 @@ module Torb
         halt_with_error 403, 'forbidden'
       end
 
-      rows = db.xquery('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id WHERE r.user_id = ? ORDER BY r.updated_at DESC LIMIT 5', user['id'])
+      total_price = 0
+      sql = <<-SQL
+        SELECT *
+        FROM reservations
+        WHERE user_id = ?
+        ORDER BY updated_at
+        DESC LIMIT 5
+      SQL
+      rows = db.xquery(sql, user['id'])
+      reserved_events = db.xquery('SELECT * FROM events WHERE id IN (?)', [if rows.size == 0 then -999999 else rows.map { |r| r['event_id'] } end])
       recent_reservations = rows.map do |row|
-        event = get_event(row['event_id'])
-        price = event['sheets'][row['sheet_rank']]['price']
-        event.delete('sheets')
-        event.delete('total')
-        event.delete('remains')
+        rank = SHEETS[row['sheet_id'].to_i - 1][:rank]
+        num = SHEETS[row['sheet_id'].to_i - 1][:num]
+        event = reserved_events.detect { |ev| ev['id'] == row['event_id'] }
+        price = event['price'] + PRICES[rank]
+        event_data = {
+          closed: event['closed_fg'],
+          public: event['public_fg'],
+          id: row['event_id'],
+          price: event['price'],
+          title: event['title'],
+        }
+
+        total_price += price unless row['canceled_at']
 
         {
           id:          row['id'],
-          event:       event,
-          sheet_rank:  row['sheet_rank'],
-          sheet_num:   row['sheet_num'],
+          event:       event_data,
+          sheet_rank:  rank,
+          sheet_num:   num,
           price:       price,
           reserved_at: row['reserved_at'].to_i,
           canceled_at: row['canceled_at']&.to_i,
@@ -257,10 +274,18 @@ module Torb
       end
 
       user['recent_reservations'] = recent_reservations
-      user['total_price'] = db.xquery('SELECT IFNULL(SUM(e.price + s.price), 0) AS total_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.user_id = ? AND r.canceled_at IS NULL', user['id']).first['total_price']
+      user['total_price'] = total_price
 
-      rows = db.xquery('SELECT event_id FROM reservations WHERE user_id = ? GROUP BY event_id ORDER BY updated_at DESC LIMIT 5', user['id'])
-      recent_events = rows.map do |row|
+      sql = <<-SQL
+        SELECT event_id
+        FROM reservations
+        WHERE user_id = ?
+        GROUP BY event_id
+        ORDER BY MAX(updated_at)
+        DESC LIMIT 5
+      SQL
+      events = db.xquery(sql, user['id'])
+      recent_events = events.map do |row|
         event = get_event(row['event_id'])
         event['sheets'].each { |_, sheet| sheet.delete('detail') }
         event
@@ -341,7 +366,7 @@ module Torb
       halt_with_error 404, 'invalid_event' unless event && event['public']
       halt_with_error 404, 'invalid_rank'  unless validate_rank(rank)
 
-      sheet_id = SHEETS.index { |s| s[:rank] == rank && s[:num] == num }
+      sheet_id = SHEETS.index { |s| s[:rank] == rank && s[:num] == num.to_i }
       halt_with_error 404, 'invalid_sheet' unless sheet_id
       sheet_id += 1
 
