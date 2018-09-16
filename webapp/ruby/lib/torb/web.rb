@@ -107,8 +107,10 @@ module Torb
               p 'c'
 
               state = states.detect { |r| r['sheet_id'] == sheet_id }
-              p 'd'
+              p state
               if state
+                p 'hoge'
+                p login_user_id
                 sheet['mine']        = true if login_user_id && state['user_id'] == login_user_id
                 sheet['reserved']    = true
                 sheet['reserved_at'] = state['reserved_at'].to_i
@@ -518,6 +520,11 @@ module Torb
       db.query('BEGIN')
       begin
         db.xquery('INSERT INTO events (title, public_fg, closed_fg, price) VALUES (?, ?, 0, ?)', title, public, price)
+        event_id = db.last_id
+        db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "S", 0)', event_id)
+        db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "A, 0)', event_id)
+        db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "B", 0)', event_id)
+        db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "C", 0)', event_id)
         event_id = db.last_id
         db.query('COMMIT')
       rescue
