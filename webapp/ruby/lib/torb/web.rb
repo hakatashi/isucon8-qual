@@ -113,7 +113,7 @@ module Torb
           sheet_id = index + 1
           p 'fuga'
           sheet = {
-            'price' => PRICE[rank],
+            'price' => PRICES[rank],
             'rank' => rank,
           }
           p 'piyo'
