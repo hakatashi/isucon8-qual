@@ -110,7 +110,7 @@ module Torb
         SHEETS.each_with_index do |sheet_data, index|
           sheet_id = index + 1
           sheet = {
-            'price' => PRICES[rank],
+            'price' => PRICES[sheet_data[:rank]],
             'rank' => sheet_data[:rank],
             'num' => sheet_data[:num],
           }
@@ -162,7 +162,7 @@ module Torb
       end
 
       def validate_rank(rank)
-        db.xquery('SELECT COUNT(*) AS total_sheets FROM sheets WHERE `rank` = ?', rank).first['total_sheets'] > 0
+        %w[S A B C].include?(rank)
       end
 
       def body_params
