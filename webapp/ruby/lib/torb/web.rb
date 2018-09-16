@@ -238,7 +238,7 @@ module Torb
 
       total_price = 0
       rows = db.xquery('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id WHERE r.user_id = ? ORDER BY r.updated_at DESC LIMIT 5', user['id'])
-      reserved_events = db.xquery('SELECT * FROM events WHERE id IN (?)', [if rows.size == 0 then -999999 else rows.map { |r| r['event_id'] }])
+      reserved_events = db.xquery('SELECT * FROM events WHERE id IN (?)', [if rows.size == 0 then -999999 else rows.map { |r| r['event_id'] } end])
       recent_reservations = rows.map do |row|
         event = reserved_events.detect { |ev| ev['id'] == row['event_id'] }
         price = event['price'] + PRICES[row['sheet_rank']]
