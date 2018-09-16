@@ -482,7 +482,7 @@ module Torb
       event = get_event(event_id)
 
       prefix = SecureRandom.uuid
-      db.xquery(<<-SQL
+      sql = <<-SQL
       (SELECT 'reservation_id','event_id','rank','num',
       'price','user_id','sold_at','canceled_at')
       UNION
@@ -496,7 +496,7 @@ module Torb
       INTO OUTFILE '/usr/share/nginx/html/csv/#{prefix}.csv' FIELDS TERMINATED BY ','
       FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY id ASC LOCK IN SHARE MODE)
       SQL
-      , event['id'])
+      db.xquery(sql, event['id'])
       redirect "http://127.0.0.1/csv/#{prefix}.csv", 307
 =begin
       reservations = db.xquery('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY id ASC LOCK IN SHARE MODE', event['id'])
