@@ -126,7 +126,7 @@ module Torb
 
           reservation = reservations.detect { |r| r['sheet_id'] == sheet_id }
           if event['id'] === 11
-            p reservation
+            p reservations, sheet_id, reservation
           end
           if reservation
             sheet['mine']        = true if login_user_id && reservation['user_id'] == login_user_id
