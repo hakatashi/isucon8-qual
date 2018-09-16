@@ -4,6 +4,13 @@ require 'erubi'
 require 'mysql2'
 require 'mysql2-cs-bind'
 
+SHEETS = {
+  S: 50,
+  A: 150,
+  B: 300,
+  C: 500,
+}
+
 module Torb
   class Web < Sinatra::Base
     configure :development do
@@ -90,7 +97,16 @@ module Torb
           event['total'] += 1
           event['sheets'][sheet['rank']]['total'] += 1
 
-          reservation = db.xquery('SELECT * FROM reservations WHERE event_id = ? AND sheet_id = ? AND canceled_at IS NULL GROUP BY event_id, sheet_id HAVING reserved_at = MIN(reserved_at)', event['id'], sheet['id']).first
+          sql = <<-SQL
+            SELECT *
+            FROM reservations
+            WHERE event_id = ?
+              AND sheet_id = ?
+              AND canceled_at IS NULL
+            GROUP BY event_id, sheet_id
+              HAVING reserved_at = MIN(reserved_at)
+          SQL
+          reservation = db.xquery(sql, event['id'], sheet['id']).first
           if reservation
             sheet['mine']        = true if login_user_id && reservation['user_id'] == login_user_id
             sheet['reserved']    = true
