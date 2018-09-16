@@ -18,13 +18,6 @@ module Torb
       register Sinatra::Reloader
     end
 
-    configure do
-      enable :logging
-      file = File.new("/home/isucon/torb/webapp/ruby/log/#{settings.environment}.log", 'a+')
-      file.sync = true
-      use Rack::CommonLogger, file
-    end
-
     set :root, File.expand_path('../..', __dir__)
     set :sessions, key: 'torb_session', expire_after: 3600
     set :session_secret, 'tagomoris'
