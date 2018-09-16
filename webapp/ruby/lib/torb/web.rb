@@ -237,11 +237,20 @@ module Torb
       end
 
       total_price = 0
-      rows = db.xquery('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id WHERE r.user_id = ? ORDER BY r.updated_at DESC LIMIT 5', user['id'])
+      sql = <<-SQL
+        SELECT *
+        FROM reservations
+        WHERE r.user_id = ?
+        ORDER BY r.updated_at
+        DESC LIMIT 5
+      SQL
+      rows = db.xquery(sql, user['id'])
       reserved_events = db.xquery('SELECT * FROM events WHERE id IN (?)', [if rows.size == 0 then -999999 else rows.map { |r| r['event_id'] } end])
       recent_reservations = rows.map do |row|
+        rank = SHEETS[row['sheet_id'].to_i - 1][:rank]
+        num = SHEETS[row['sheet_id'].to_i - 1][:num]
         event = reserved_events.detect { |ev| ev['id'] == row['event_id'] }
-        price = event['price'] + PRICES[row['sheet_rank']]
+        price = event['price'] + PRICES[rank]
         event_data = {
           closed: event['closed_fg'],
           public: event['public_fg'],
@@ -255,8 +264,8 @@ module Torb
         {
           id:          row['id'],
           event:       event_data,
-          sheet_rank:  row['sheet_rank'],
-          sheet_num:   row['sheet_num'],
+          sheet_rank:  rank,
+          sheet_num:   num,
           price:       price,
           reserved_at: row['reserved_at'].to_i,
           canceled_at: row['canceled_at']&.to_i,
@@ -266,8 +275,16 @@ module Torb
       user['recent_reservations'] = recent_reservations
       user['total_price'] = total_price
 
-      rows = db.xquery('SELECT event_id FROM reservations WHERE user_id = ? GROUP BY event_id ORDER BY MAX(updated_at) DESC LIMIT 5', user['id'])
-      recent_events = rows.map do |row|
+      sql = <<-SQL
+        SELECT event_id
+        FROM reservations
+        WHERE user_id = ?
+        GROUP BY event_id
+        ORDER BY MAX(updated_at)
+        DESC LIMIT 5
+      SQL
+      events = db.xquery(sql, user['id'])
+      recent_events = events.map do |row|
         event = get_event(row['event_id'])
         event['sheets'].each { |_, sheet| sheet.delete('detail') }
         event
