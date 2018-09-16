@@ -412,48 +412,57 @@ module Torb
     end
 
     post '/api/events/:id/actions/reserve', login_required: true do |event_id|
+      start = Time.now
       rank = body_params['sheet_rank']
 
+      p({a: Time.now - start})
       user  = get_login_user
+      p({b: Time.now - start})
       event = get_event(event_id, user['id'])
+      p({c: Time.now - start})
       halt_with_error 404, 'invalid_event' unless event && event['public']
       halt_with_error 400, 'invalid_rank' unless validate_rank(rank)
+      p({d: Time.now - start})
 
       sheet = nil
       reservation_id = nil
-      loop do
-        sheet = db.xquery('SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL) AND `rank` = ? ORDER BY RAND() LIMIT 1', event['id'], rank).first
-        halt_with_error 409, 'sold_out' unless sheet
-        db.query('BEGIN')
-        begin
-          now = Time.now.utc.strftime('%F %T.%6N')
-          db.xquery('INSERT INTO reservations (event_id, sheet_id, user_id, reserved_at, updated_at) VALUES (?, ?, ?, ?, ?)', event['id'], sheet['id'], user['id'], now, now)
-          reservation_id = db.last_id
-          sql = <<-SQL
-            INSERT IGNORE INTO sheetstates (
-              event_id,
-              sheet_id,
-              user_id,
-              reserved_at
-            ) VALUES (?, ?, ?, ?)
-          SQL
-          db.xquery(sql, event['id'], sheet['id'], user['id'], now)
-          sql = <<-SQL
-            UPDATE sheetcounts
-            SET count = count + 1
-            WHERE event_id = ?
-            AND rank = ?
-          SQL
-          db.xquery(sql, event['id'], rank)
-          db.query('COMMIT')
-        rescue => e
-          db.query('ROLLBACK')
-          warn "re-try: rollback by #{e}"
-          next
-        end
+      p({dd: Time.now - start})
 
-        break
+      db.query('BEGIN')
+      sheet = db.xquery('SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM sheetstates WHERE event_id = ?) AND `rank` = ? ORDER BY RAND() LIMIT 1', event['id'], rank).first
+      halt_with_error 409, 'sold_out' unless sheet
+
+      p({e: Time.now - start})
+      begin
+        p({f: Time.now - start})
+        now = Time.now.utc.strftime('%F %T.%6N')
+        db.xquery('INSERT INTO reservations (event_id, sheet_id, user_id, reserved_at, updated_at) VALUES (?, ?, ?, ?, ?)', event['id'], sheet['id'], user['id'], now, now)
+        p({g: Time.now - start})
+        reservation_id = db.last_id
+        sql = <<-SQL
+          INSERT IGNORE INTO sheetstates (
+            event_id,
+            sheet_id,
+            user_id,
+            reserved_at
+          ) VALUES (?, ?, ?, ?)
+        SQL
+        db.xquery(sql, event['id'], sheet['id'], user['id'], now)
+        p({h: Time.now - start})
+        sql = <<-SQL
+          UPDATE sheetcounts
+          SET count = count + 1
+          WHERE event_id = ?
+          AND rank = ?
+        SQL
+        db.xquery(sql, event['id'], rank)
+        p({i: Time.now - start})
+        db.query('COMMIT')
+      rescue => e
+        db.query('ROLLBACK')
       end
+
+      p({j: Time.now - start})
 
       status 202
       { id: reservation_id, sheet_rank: rank, sheet_num: sheet['num'] } .to_json
