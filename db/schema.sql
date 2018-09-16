@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     login_name  CHAR(128) NOT NULL,
     pass_hash   CHAR(128) NOT NULL,
     UNIQUE KEY login_name_uniq (login_name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS events (
     id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS events (
     public_fg   TINYINT(1)       NOT NULL,
     closed_fg   TINYINT(1)       NOT NULL,
     price       INTEGER UNSIGNED NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS sheetstates (
     id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS sheetstates (
     INDEX `sheet_id_idx` (`sheet_id`),
     INDEX `user_id_idx` (`user_id`),
     INDEX `reserved_at_idx` (`reserved_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS sheetcounts (
     id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS sheetcounts (
     INDEX `event_id_idx` (`event_id`),
     INDEX `rank_idx` (`rank`),
     INDEX `count_idx` (`count`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS sheets (
     id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS sheets (
     price       INTEGER UNSIGNED NOT NULL,
     UNIQUE KEY rank_num_uniq (`rank`, num),
     INDEX `rank_idx` (`rank`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS reservations (
     id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -69,4 +69,4 @@ CREATE TABLE IF NOT EXISTS administrators (
     login_name  CHAR(128) NOT NULL,
     pass_hash   CHAR(128) NOT NULL,
     UNIQUE KEY login_name_uniq (login_name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4;
