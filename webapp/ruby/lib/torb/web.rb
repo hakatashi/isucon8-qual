@@ -4,6 +4,7 @@ require 'erubi'
 require 'mysql2'
 require 'mysql2-cs-bind'
 require 'digest/md5'
+require 'securerandom'
 
 SHEETS = [
   *(['S'] * 50).each_with_index.map { |rank, index| {rank: rank, num: index + 1} },
@@ -342,7 +343,7 @@ module Torb
       sheet = nil
       reservation_id = nil
       loop do
-        sheet = db.xquery('SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) AND `rank` = ? ORDER BY RAND() LIMIT 1', event['id'], rank).first
+        sheet = db.xquery('SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) AND `rank` = ? LIMIT 1', event['id'], rank).first
         halt_with_error 409, 'sold_out' unless sheet
         db.query('BEGIN')
         begin
@@ -480,6 +481,24 @@ module Torb
     get '/admin/api/reports/events/:id/sales', admin_login_required: true do |event_id|
       event = get_event(event_id)
 
+      prefix = SecureRandom.uuid
+      sql = <<-SQL
+      (SELECT 'reservation_id','event_id','rank','num',
+      'price','user_id','sold_at','canceled_at')
+      UNION
+      (SELECT
+      r.id AS reservation_id, e.id AS event_id, s.rank AS sheet_rank,
+      s.num AS sheet_num,
+      (s.price + e.price) AS price,
+      r.user_id AS user_id,
+      DATE_FORMAT(r.reserved_at, '%Y-%m-%dT%TZ') AS sold_at,
+      IFNULL(DATE_FORMAT(r.canceled_at, '%Y-%m-%dT%TZ'), '') AS canceled_at
+      INTO OUTFILE '/usr/share/nginx/html/csv/#{prefix}.csv' FIELDS TERMINATED BY ','
+      FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY r.id ASC LOCK IN SHARE MODE)
+      SQL
+      db.xquery(sql, event['id'])
+      redirect "http://127.0.0.1/csv/#{prefix}.csv", 307
+=begin
       reservations = db.xquery('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY id ASC LOCK IN SHARE MODE', event['id'])
       reports = reservations.map do |reservation|
         {
@@ -495,11 +514,11 @@ module Torb
       end
 
       render_report_csv(reports)
+=end
     end
 
     get '/admin/api/reports/sales', admin_login_required: true do
-      #reservations = db.query('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.id AS event_id, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY id ASC LOCK IN SHARE MODE')
-      prefix = Digest::MD5.hexdigest(Time.now)
+      prefix = SecureRandom.uuid
       db.query(<<-SQL
       (SELECT 'reservation_id','event_id','rank','num',
       'price','user_id','sold_at','canceled_at')
@@ -514,9 +533,10 @@ module Torb
       INTO OUTFILE '/usr/share/nginx/html/csv/#{prefix}.csv' FIELDS TERMINATED BY ','
       FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY r.id ASC LOCK IN SHARE MODE);
       SQL
-      )      
-      
+      )
+      redirect "http://127.0.0.1/csv/#{prefix}.csv", 307
 =begin
+      reservations = db.query('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.id AS event_id, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY id ASC LOCK IN SHARE MODE')
       reports = reservations.map do |reservation|
         {
           reservation_id: reservation['id'],
@@ -529,9 +549,8 @@ module Torb
           price:          reservation['event_price'] + reservation['sheet_price'],
         }
       end
+      render_report_csv(reports)
 =end
-      redirect 'http://118.27.29.167/#{prefix}.csv'
-      #render_report_csv(reports)
     end
   end
 end
