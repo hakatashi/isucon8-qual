@@ -107,10 +107,9 @@ module Torb
           GROUP BY event_id, sheet_id
             HAVING reserved_at = MIN(reserved_at)
         SQL
-        reservations = db.xquery(sql, event['id'])
+        reservations = db.xquery(sql, event['id']).to_a
         p reservations
         SHEETS.each_with_index do |rank, index|
-          p rank, index
           sheet_id = index + 1
           event['sheets'][sheet['rank']]['price'] ||= event['price'] + sheet['price']
           event['total'] += 1
