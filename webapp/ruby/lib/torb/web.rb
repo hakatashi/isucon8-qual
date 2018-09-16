@@ -98,7 +98,6 @@ module Torb
           event['sheets'][rank] = { 'total' => 0, 'remains' => 0, 'detail' => [] }
         end
 
-        sheets = db.query('SELECT * FROM sheets ORDER BY `rank`, num')
         sql = <<-SQL
           SELECT *
           FROM reservations
