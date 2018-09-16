@@ -525,7 +525,6 @@ module Torb
         db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "A, 0)', event_id)
         db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "B", 0)', event_id)
         db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "C", 0)', event_id)
-        event_id = db.last_id
         db.query('COMMIT')
       rescue
         db.query('ROLLBACK')
