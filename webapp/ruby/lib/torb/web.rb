@@ -481,6 +481,24 @@ module Torb
     get '/admin/api/reports/events/:id/sales', admin_login_required: true do |event_id|
       event = get_event(event_id)
 
+      prefix = SecureRandom.uuid
+      db.xquery(<<-SQL
+      (SELECT 'reservation_id','event_id','rank','num',
+      'price','user_id','sold_at','canceled_at')
+      UNION
+      (SELECT
+      r.id AS reservation_id, e.id AS event_id, s.rank AS sheet_rank,
+      s.num AS sheet_num,
+      (s.price + e.price) AS price,
+      r.user_id AS user_id,
+      DATE_FORMAT(r.reserved_at, '%Y-%m-%dT%TZ') AS sold_at,
+      IFNULL(DATE_FORMAT(r.canceled_at, '%Y-%m-%dT%TZ'), '') AS canceled_at
+      INTO OUTFILE '/usr/share/nginx/html/csv/#{prefix}.csv' FIELDS TERMINATED BY ','
+      FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY id ASC LOCK IN SHARE MODE)
+      SQL
+      , event['id'])
+      redirect "http://127.0.0.1/csv/#{prefix}.csv", 307
+=begin
       reservations = db.xquery('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY id ASC LOCK IN SHARE MODE', event['id'])
       reports = reservations.map do |reservation|
         {
@@ -496,6 +514,7 @@ module Torb
       end
 
       render_report_csv(reports)
+=end
     end
 
     get '/admin/api/reports/sales', admin_login_required: true do
