@@ -111,13 +111,18 @@ module Torb
         SHEETS.each_with_index do |rank, index|
           p 'hoge'
           sheet_id = index + 1
+          p 'fuga'
           sheet = {
             'price' => PRICE[rank],
             'rank' => rank,
           }
+          p 'piyo'
           event['sheets'][sheet['rank']]['price'] ||= event['price'] + sheet['price']
+          p 'aaa'
           event['total'] += 1
+          p 'bbb'
           event['sheets'][sheet['rank']]['total'] += 1
+          p 'ccc'
 
           reservation = reservations.detect { |r| r['sheet_id'] == sheet_id }
           p reservation
