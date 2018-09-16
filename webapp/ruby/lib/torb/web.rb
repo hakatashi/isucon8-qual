@@ -112,6 +112,7 @@ module Torb
           p reservations
         end
         SHEETS.each_with_index do |sheet_data, index|
+          p sheet_data, index
           rank = sheet_data[:rank]
           index = sheet_data[:index]
           sheet_id = index + 1
