@@ -108,20 +108,14 @@ module Torb
             HAVING reserved_at = MIN(reserved_at)
         SQL
         reservations = db.xquery(sql, event['id']).to_a
-        if event['id'] === 11
-          p reservations
-        end
         SHEETS.each_with_index do |sheet_data, index|
-          if event['id'] === 11
-            p sheet_data, index
-          end
-          rank = sheet_data[:rank]
-          index = sheet_data[:index]
           sheet_id = index + 1
+          rank = sheet_data[:rank]
+          sheet_index = sheet_data[:index]
           sheet = {
             'price' => PRICES[rank],
             'rank' => rank,
-            'num' => index + 1,
+            'num' => sheet_index + 1,
           }
           event['sheets'][sheet['rank']]['price'] ||= event['price'] + sheet['price']
           event['total'] += 1
