@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS sheetcounts (
     event_id    INTEGER UNSIGNED NOT NULL,
     `rank`      CHAR(4)     NOT NULL,
     count       INTEGER UNSIGNED NOT NULL,
+    UNIQUE KEY event_id_rank_uniq (event_id, `rank`),
     INDEX `event_id_idx` (`event_id`),
     INDEX `rank_idx` (`rank`),
     INDEX `count_idx` (`count`)

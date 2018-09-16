@@ -534,10 +534,15 @@ module Torb
       begin
         db.xquery('INSERT INTO events (title, public_fg, closed_fg, price) VALUES (?, ?, 0, ?)', title, public, price)
         event_id = db.last_id
+        p 'S'
         db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "S", 0)', event_id)
+        p 'A'
         db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "A, 0)', event_id)
+        p 'B'
         db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "B", 0)', event_id)
+        p 'C'
         db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "C", 0)', event_id)
+        p 'D'
         db.query('COMMIT')
       rescue
         db.query('ROLLBACK')
