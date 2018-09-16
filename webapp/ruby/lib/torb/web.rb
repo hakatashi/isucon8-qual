@@ -115,7 +115,7 @@ module Torb
           sheet = {
             'price' => PRICES[rank],
             'rank' => rank,
-            'num' => index,
+            'num' => index + 1,
           }
           event['sheets'][sheet['rank']]['price'] ||= event['price'] + sheet['price']
           event['total'] += 1
