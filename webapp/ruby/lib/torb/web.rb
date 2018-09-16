@@ -84,7 +84,7 @@ module Torb
           events = db.query('SELECT * FROM events ORDER BY id ASC').select(&where)
           if events.size < 5
             sql = <<-SQL
-              SELECT reserved_at
+              SELECT sheet_id, event_id, reserved_at
               FROM sheetstates
               WHERE event_id IN (?)
             SQL
@@ -99,7 +99,7 @@ module Torb
             end
             if events.size >= 5
               sql = <<-SQL
-                SELECT reserved_at
+                SELECT sheet_id, event_id, reserved_at
                 FROM sheetstates
                 WHERE event_id = ?
               SQL
