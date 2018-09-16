@@ -238,7 +238,7 @@ module Torb
 
       rows = db.xquery('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id WHERE r.user_id = ? ORDER BY r.updated_at DESC LIMIT 5', user['id'])
       recent_reservations = rows.map do |row|
-        event = db.xquery('SELECT * FROM events WHERE id = ?', event_id).first
+        event = db.xquery('SELECT * FROM events WHERE id = ?', row['event_id']).first
         price = PRICES[row['sheet_rank']]
         event_data = {
           closed: event['closed_fg'],
