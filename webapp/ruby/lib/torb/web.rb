@@ -11,6 +11,13 @@ SHEETS = [
   *(['C'] * 500),
 ]
 
+PRICES = {
+  'S' => 5000,
+  'A' => 3000,
+  'B' => 1000,
+  'C' => 0,
+}
+
 module Torb
   class Web < Sinatra::Base
     configure :development do
@@ -101,9 +108,13 @@ module Torb
             HAVING reserved_at = MIN(reserved_at)
         SQL
         reservations = db.xquery(sql, event['id']).to_a
-        p reservations
         SHEETS.each_with_index do |rank, index|
+          p 'hoge'
           sheet_id = index + 1
+          sheet = {
+            'price' => PRICE[rank],
+            'rank' => rank,
+          }
           event['sheets'][sheet['rank']]['price'] ||= event['price'] + sheet['price']
           event['total'] += 1
           event['sheets'][sheet['rank']]['total'] += 1
