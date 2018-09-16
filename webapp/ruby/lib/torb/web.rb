@@ -88,6 +88,7 @@ module Torb
             WHERE event_id IN (?)
           SQL
           states = db.xquery(sql, [if events.size == 0 then -999999 else events.map { |e| e['id'] } end]).to_a
+          p states
           event_data = events.map do |event|
             event['total']   = 0
             event['remains'] = 0
