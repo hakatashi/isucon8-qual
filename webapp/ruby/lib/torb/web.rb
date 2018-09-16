@@ -238,15 +238,19 @@ module Torb
 
       rows = db.xquery('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id WHERE r.user_id = ? ORDER BY r.updated_at DESC LIMIT 5', user['id'])
       recent_reservations = rows.map do |row|
-        event = get_event(row['event_id'])
-        price = event['sheets'][row['sheet_rank']]['price']
-        event.delete('sheets')
-        event.delete('total')
-        event.delete('remains')
+        event = db.xquery('SELECT * FROM events WHERE id = ?', event_id).first
+        price = PRICES[row['sheet_rank']]
+        event_data = {
+          closed: event['closed_fg'],
+          public: event['public_fg'],
+          id: row['event_id'],
+          price: event['price'],
+          title: event['title'],
+        }
 
         {
           id:          row['id'],
-          event:       event,
+          event:       event_data,
           sheet_rank:  row['sheet_rank'],
           sheet_num:   row['sheet_num'],
           price:       price,
