@@ -276,16 +276,18 @@ module Torb
       user['total_price'] = total_price
 
       sql = <<-SQL
-        SELECT event_id
-        FROM reservations
-        WHERE user_id = ?
-        GROUP BY event_id
-        ORDER BY MAX(updated_at)
+        SELECT e.*
+        FROM events e
+        LEFT JOIN reservations r
+          ON r.event_id = e.id
+        WHERE r.user_id = ?
+        GROUP BY r.event_id
+        ORDER BY MAX(r.updated_at)
         DESC LIMIT 5
       SQL
       events = db.xquery(sql, user['id'])
-      recent_events = events.map do |row|
-        event = get_event(row['event_id'])
+      recent_events = events.map do |event|
+        event = get_event(event['id'])
         event['sheets'].each { |_, sheet| sheet.delete('detail') }
         event
       end
