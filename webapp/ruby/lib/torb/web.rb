@@ -20,6 +20,13 @@ PRICES = {
   'C' => 0,
 }
 
+SHEET_TOTAL = {
+  'S' => 50,
+  'A' => 150,
+  'B' => 300,
+  'C' => 500,
+}
+
 module Torb
   class Web < Sinatra::Base
     configure :development do
