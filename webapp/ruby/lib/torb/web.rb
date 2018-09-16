@@ -240,8 +240,8 @@ module Torb
       sql = <<-SQL
         SELECT *
         FROM reservations
-        WHERE r.user_id = ?
-        ORDER BY r.updated_at
+        WHERE user_id = ?
+        ORDER BY updated_at
         DESC LIMIT 5
       SQL
       rows = db.xquery(sql, user['id'])
