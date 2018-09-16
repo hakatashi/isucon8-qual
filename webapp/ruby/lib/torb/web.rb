@@ -497,7 +497,7 @@ module Torb
       FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY r.id ASC LOCK IN SHARE MODE)
       SQL
       db.xquery(sql, event['id'])
-      redirect "http://127.0.0.1/csv/#{prefix}.csv", 307
+      redirect "http://172.17.147.2/csv/#{prefix}.csv", 307
 =begin
       reservations = db.xquery('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY id ASC LOCK IN SHARE MODE', event['id'])
       reports = reservations.map do |reservation|
@@ -534,7 +534,7 @@ module Torb
       FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY r.id ASC LOCK IN SHARE MODE);
       SQL
       )
-      redirect "http://127.0.0.1/csv/#{prefix}.csv", 307
+      redirect "http://172.17.147.2/csv/#{prefix}.csv", 307
 =begin
       reservations = db.query('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.id AS event_id, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY id ASC LOCK IN SHARE MODE')
       reports = reservations.map do |reservation|
