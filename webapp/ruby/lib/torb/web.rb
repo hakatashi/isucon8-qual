@@ -5,10 +5,10 @@ require 'mysql2'
 require 'mysql2-cs-bind'
 
 SHEETS = [
-  *(['S'] * 50),
-  *(['A'] * 150),
-  *(['B'] * 300),
-  *(['C'] * 500),
+  *(['S'] * 50).each_with_index.map { |rank, index| {rank: rank, index: index} },
+  *(['A'] * 150).each_with_index.map { |rank, index| {rank: rank, index: index} },
+  *(['B'] * 300).each_with_index.map { |rank, index| {rank: rank, index: index} },
+  *(['C'] * 500).each_with_index.map { |rank, index| {rank: rank, index: index} },
 ]
 
 PRICES = {
@@ -108,11 +108,14 @@ module Torb
             HAVING reserved_at = MIN(reserved_at)
         SQL
         reservations = db.xquery(sql, event['id']).to_a
-        SHEETS.each_with_index do |rank, index|
+        SHEETS.each_with_index do |sheet_data, index|
+          rank = sheet_data[:rank]
+          index = sheet_data[:index]
           sheet_id = index + 1
           sheet = {
             'price' => PRICES[rank],
             'rank' => rank,
+            'num' => index,
           }
           event['sheets'][sheet['rank']]['price'] ||= event['price'] + sheet['price']
           event['total'] += 1
