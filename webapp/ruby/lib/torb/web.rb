@@ -3,6 +3,7 @@ require 'sinatra/base'
 require 'erubi'
 require 'mysql2'
 require 'mysql2-cs-bind'
+require 'digest/md5'
 
 SHEETS = [
   *(['S'] * 50).each_with_index.map { |rank, index| {rank: rank, num: index + 1} },
@@ -497,7 +498,25 @@ module Torb
     end
 
     get '/admin/api/reports/sales', admin_login_required: true do
-      reservations = db.query('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.id AS event_id, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY id ASC LOCK IN SHARE MODE')
+      #reservations = db.query('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.id AS event_id, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY id ASC LOCK IN SHARE MODE')
+      prefix = Digest::MD5.hexdigest(Time.now)
+      db.query(<<-SQL
+      (SELECT 'reservation_id','event_id','rank','num',
+      'price','user_id','sold_at','canceled_at')
+      UNION
+      (SELECT
+      r.id AS reservation_id, r.event_id AS event_id, s.rank AS sheet_rank,
+      s.num AS sheet_num,
+      (s.price + e.price) AS price,
+      r.user_id AS user_id,
+      DATE_FORMAT(r.reserved_at, '%Y-%m-%dT%TZ') AS sold_at,
+      IFNULL(DATE_FORMAT(r.canceled_at, '%Y-%m-%dT%TZ'), '') AS canceled_at      
+      INTO OUTFILE '/usr/share/nginx/html/csv/#{prefix}.csv' FIELDS TERMINATED BY ','
+      FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY r.id ASC LOCK IN SHARE MODE);
+      SQL
+      )      
+      
+=begin
       reports = reservations.map do |reservation|
         {
           reservation_id: reservation['id'],
@@ -510,8 +529,9 @@ module Torb
           price:          reservation['event_price'] + reservation['sheet_price'],
         }
       end
-
-      render_report_csv(reports)
+=end
+      redirect 'http://118.27.29.167/#{prefix}.csv'
+      #render_report_csv(reports)
     end
   end
 end
