@@ -471,7 +471,7 @@ module Torb
 
       db.query('BEGIN')
       begin
-        reservation = db.xquery('SELECT * FROM reservations WHERE event_id = ? AND sheet_id = ? AND canceled_at IS NULL GROUP BY event_id HAVING reserved_at = MIN(reserved_at) FOR UPDATE', event['id'], sheet_id).first
+        reservation = db.xquery('SELECT * FROM reservations WHERE event_id = ? AND sheet_id = ? AND canceled_at IS NULL GROUP BY event_id HAVING reserved_at = MIN(reserved_at)', event['id'], sheet_id).first
         unless reservation
           db.query('ROLLBACK')
           halt_with_error 400, 'not_reserved'
