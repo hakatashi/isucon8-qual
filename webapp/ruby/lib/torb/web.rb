@@ -83,7 +83,7 @@ module Torb
         begin
           p({ start: Time.now })
           events = db.query('SELECT * FROM events ORDER BY id ASC').select(&where)
-          if events.size > 5
+          if events.size < 5
             sql = <<-SQL
               SELECT *
               FROM sheetstates
