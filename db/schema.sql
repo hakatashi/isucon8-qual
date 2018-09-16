@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     INDEX `reserved_at_idx` (reserved_at),
     INDEX `canceled_at_idx` (canceled_at),
     INDEX `updated_at_idx` (updated_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS administrators (
     id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
