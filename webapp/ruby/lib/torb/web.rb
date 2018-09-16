@@ -84,7 +84,6 @@ module Torb
             %w[S A B C].each do |rank|
               event['sheets'][rank] = { 'total' => 0, 'remains' => 0, 'detail' => [] }
             end
-            p 'a'
 
             sql = <<-SQL
               SELECT *
@@ -92,8 +91,8 @@ module Torb
               WHERE event_id = ?
             SQL
             states = db.xquery(sql, event['id']).to_a
-            p 'b'
             SHEETS.each_with_index do |sheet_data, index|
+              p sheet_data, index
               sheet_id = index + 1
               sheet = {
                 'price' => PRICES[sheet_data[:rank]],
