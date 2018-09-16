@@ -4,12 +4,12 @@ require 'erubi'
 require 'mysql2'
 require 'mysql2-cs-bind'
 
-SHEETS = {
-  S: 50,
-  A: 150,
-  B: 300,
-  C: 500,
-}
+SHEETS = [
+  *(['S'] * 50),
+  *(['A'] * 150),
+  *(['B'] * 300),
+  *(['C'] * 500),
+]
 
 module Torb
   class Web < Sinatra::Base
@@ -99,21 +99,22 @@ module Torb
         end
 
         sheets = db.query('SELECT * FROM sheets ORDER BY `rank`, num')
-        sheets.each do |sheet|
+        sql = <<-SQL
+          SELECT *
+          FROM reservations
+          WHERE event_id = ?
+            AND canceled_at IS NULL
+          GROUP BY event_id, sheet_id
+            HAVING reserved_at = MIN(reserved_at)
+        SQL
+        reservations = db.xquery(sql, event['id'], sheet['id'])
+        SHEETS.each_with_index do |rank, index|
+          sheet_id = index + 1
           event['sheets'][sheet['rank']]['price'] ||= event['price'] + sheet['price']
           event['total'] += 1
           event['sheets'][sheet['rank']]['total'] += 1
 
-          sql = <<-SQL
-            SELECT *
-            FROM reservations
-            WHERE event_id = ?
-              AND sheet_id = ?
-              AND canceled_at IS NULL
-            GROUP BY event_id, sheet_id
-              HAVING reserved_at = MIN(reserved_at)
-          SQL
-          reservation = db.xquery(sql, event['id'], sheet['id']).first
+          reservation = reservations.detect { |r| r['sheet_id'] == sheet_id }
           if reservation
             sheet['mine']        = true if login_user_id && reservation['user_id'] == login_user_id
             sheet['reserved']    = true
