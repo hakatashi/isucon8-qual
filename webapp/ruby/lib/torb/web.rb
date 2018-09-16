@@ -112,7 +112,9 @@ module Torb
           p reservations
         end
         SHEETS.each_with_index do |sheet_data, index|
-          p sheet_data, index
+          if event['id'] === 11
+            p sheet_data, index
+          end
           rank = sheet_data[:rank]
           index = sheet_data[:index]
           sheet_id = index + 1
