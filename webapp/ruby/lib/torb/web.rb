@@ -327,10 +327,32 @@ module Torb
         DESC LIMIT 5
       SQL
       events = db.xquery(sql, user['id'])
+      recent_sheets = db.xquery('SELECT * FROM sheetcounts WHERE event_id IN (?)', [if events.size == 0 then -999999 else events.map { |r| r['id'] } end])
       recent_events = events.map do |event|
-        event = get_event(event['id'])
-        event['sheets'].each { |_, sheet| sheet.delete('detail') }
-        event
+        event_data = {
+          closed: event['closed_fg'],
+          id: event['id'],
+          price: event['price'],
+          public: event['public_fg'],
+          remains: 0,
+          sheets: {},
+          title: event['title'],
+          total: 1000,
+        }
+
+        PRICES.each do |r, p|
+          sheet = recent_sheets.detect { |sh| sh['event_id'] == event['id'] && sh['rank'] == r }
+          event_data['remains'] += SHEET_TOTAL[r] - sh['count']
+          event_data['sheets'][r] = {
+            price: event['price'] + PRICES[rank],
+            remains: SHEET_TOTAL[r] - sh['count'],
+            total: SHEET_TOTAL[r]
+          }
+        end
+        
+        # event = get_event(event['id'])
+        # event['sheets'].each { |_, sheet| sheet.delete('detail') }
+        event_data
       end
       user['recent_events'] = recent_events
 
