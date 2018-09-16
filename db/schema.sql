@@ -14,6 +14,18 @@ CREATE TABLE IF NOT EXISTS events (
     price       INTEGER UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS sheetstates (
+    id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    event_id    INTEGER UNSIGNED NOT NULL,
+    sheet_id    INTEGER UNSIGNED NOT NULL,
+    user_id     INTEGER UNSIGNED NOT NULL,
+    reserved_at DATETIME(6)      NOT NULL,
+    INDEX `event_id_idx` (`event_id`),
+    INDEX `sheet_id_idx` (`sheet_id`),
+    INDEX `user_id_idx` (`user_id`),
+    INDEX `reserved_at_idx` (`reserved_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS sheets (
     id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     `rank`      VARCHAR(128)     NOT NULL,
