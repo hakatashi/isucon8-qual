@@ -340,7 +340,7 @@ module Torb
       halt_with_error 404, 'invalid_event' unless event && event['public']
       halt_with_error 404, 'invalid_rank'  unless validate_rank(rank)
 
-      sheet_id = SHEETS.index { |s| s[:rank] == rank && s[:num] == num }
+      sheet_id = SHEETS.index { |s| s[:rank] == rank && s[:num] == num.to_i }
       halt_with_error 404, 'invalid_sheet' unless sheet_id
       sheet_id += 1
 
