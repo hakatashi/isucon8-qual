@@ -83,12 +83,14 @@ module Torb
         begin
           p({ start: Time.now })
           events = db.query('SELECT * FROM events ORDER BY id ASC').select(&where)
+          p events.size
           sql = <<-SQL
             SELECT *
             FROM sheetstates
             WHERE event_id IN (?)
           SQL
           states = db.xquery(sql, [if events.size == 0 then -999999 else events.map { |e| e['id'] } end]).to_a
+          p states.size
           p({ fetch: Time.now })
           event_data = events.map do |event|
             event['total']   = 0
