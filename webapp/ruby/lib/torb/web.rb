@@ -81,6 +81,7 @@ module Torb
 
         db.query('BEGIN')
         begin
+          p({ start: Time.now })
           events = db.query('SELECT * FROM events ORDER BY id ASC').select(&where)
           sql = <<-SQL
             SELECT *
@@ -88,7 +89,7 @@ module Torb
             WHERE event_id IN (?)
           SQL
           states = db.xquery(sql, [if events.size == 0 then -999999 else events.map { |e| e['id'] } end]).to_a
-          p states.size
+          p({ fetch: Time.now })
           event_data = events.map do |event|
             event['total']   = 0
             event['remains'] = 0
@@ -134,6 +135,7 @@ module Torb
         rescue
           db.query('ROLLBACK')
         end
+        p({ end: Time.now })
 
         event_data
       end
