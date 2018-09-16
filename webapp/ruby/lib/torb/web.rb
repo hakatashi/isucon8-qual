@@ -104,7 +104,7 @@ module Torb
           FROM reservations
           WHERE event_id = ?
             AND canceled_at IS NULL
-          GROUP BY event_id
+          GROUP BY sheet_id
             HAVING reserved_at = MIN(reserved_at)
         SQL
         reservations = db.xquery(sql, event['id']).to_a
