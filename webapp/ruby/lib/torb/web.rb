@@ -108,13 +108,16 @@ module Torb
             HAVING reserved_at = MIN(reserved_at)
         SQL
         reservations = db.xquery(sql, event['id'], sheet['id'])
+        p reservations
         SHEETS.each_with_index do |rank, index|
+          p rank, index
           sheet_id = index + 1
           event['sheets'][sheet['rank']]['price'] ||= event['price'] + sheet['price']
           event['total'] += 1
           event['sheets'][sheet['rank']]['total'] += 1
 
           reservation = reservations.detect { |r| r['sheet_id'] == sheet_id }
+          p reservation
           if reservation
             sheet['mine']        = true if login_user_id && reservation['user_id'] == login_user_id
             sheet['reserved']    = true
