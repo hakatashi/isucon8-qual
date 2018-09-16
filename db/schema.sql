@@ -44,7 +44,6 @@ CREATE TABLE IF NOT EXISTS reservations (
     canceled_at DATETIME(6)      DEFAULT NULL,
     updated_at  DATETIME(6)      DEFAULT NULL,
     KEY event_id_and_sheet_id_idx (event_id, sheet_id),
-    UNIQUE INDEX `id_idx` (id),
     INDEX `sheet_id_idx` (sheet_id),
     INDEX `reserved_at_idx` (reserved_at),
     INDEX `canceled_at_idx` (canceled_at),
