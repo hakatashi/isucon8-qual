@@ -359,6 +359,13 @@ module Torb
             ) VALUES (?, ?, ?, ?)
           SQL
           db.xquery(sql, event['id'], sheet['id'], user['id'], now)
+          sql = <<-SQL
+            UPDATE sheetcounts
+            SET count = count + 1
+            WHERE event_id = ?
+            AND rank = ?
+          SQL
+          db.xquery(sql, event['id'], rank)
           db.query('COMMIT')
         rescue => e
           db.query('ROLLBACK')
@@ -402,6 +409,13 @@ module Torb
             AND sheet_id = ?
         SQL
         db.xquery(sql, event['id'], sheet_id)
+        sql = <<-SQL
+          UPDATE sheetcounts
+          SET count = count - 1
+          WHERE event_id = ?
+          AND rank = ?
+        SQL
+        db.xquery(sql, event['id'], rank)
         db.query('COMMIT')
       rescue => e
         warn "rollback by: #{e}"
