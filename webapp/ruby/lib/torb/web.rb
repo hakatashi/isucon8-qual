@@ -339,7 +339,8 @@ module Torb
         DESC LIMIT 5
       SQL
       events = db.xquery(sql, user['id'])
-      recent_sheets = db.xquery('SELECT * FROM sheetcounts WHERE event_id IN (?)', [if events.size == 0 then -999999 else events.map { |r| r['id'] } end])
+      recent_sheets = db.xquery('SELECT * FROM sheetcounts WHERE event_id IN (?)', [if events.size == 0 then -999999 else events.map { |r| r['id'] } end]).map { |r| { event_id: r['event_id'], rank: r['rank'], count: r['count'] } }
+      recent_sheets = events.map { |row| PRICES.map { |ra, pr| { 'event_id': row['id'], 'rank': ra, 'count': 0 } } }.flatten! unless recent_sheets.size != 0
       recent_events = events.map do |event|
         event_data = {
           closed: event['closed_fg'],
@@ -352,12 +353,12 @@ module Torb
           total: 1000,
         }
 
-        PRICES.each do |r, p|
-          sheet = recent_sheets.detect { |sh| sh['event_id'] == event['id'] && sh['rank'] == r }
-          event_data['remains'] += SHEET_TOTAL[r] - sh['count']
-          event_data['sheets'][r] = {
-            price: event['price'] + PRICES[rank],
-            remains: SHEET_TOTAL[r] - sh['count'],
+        PRICES.each do |r, pr|
+          sheet = recent_sheets.detect { |sh| sh[:event_id] == event['id'] && sh[:rank] == r }
+          event_data[:remains] += SHEET_TOTAL[r] - sheet[:count]
+          event_data[:sheets][r] = {
+            price: event['price'] + pr,
+            remains: SHEET_TOTAL[r] - sheet[:count],
             total: SHEET_TOTAL[r]
           }
         end
