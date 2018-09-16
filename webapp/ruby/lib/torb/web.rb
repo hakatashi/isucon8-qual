@@ -63,7 +63,7 @@ module Torb
           database_timezone: :utc,
           cast_booleans: true,
           reconnect: true,
-          init_command: 'SET SESSION sql_mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"',
+          #init_command: 'SET SESSION sql_mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"',
         )
       end
 
@@ -258,7 +258,7 @@ module Torb
       user['recent_reservations'] = recent_reservations
       user['total_price'] = db.xquery('SELECT IFNULL(SUM(e.price + s.price), 0) AS total_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.user_id = ? AND r.canceled_at IS NULL', user['id']).first['total_price']
 
-      rows = db.xquery('SELECT event_id FROM reservations WHERE user_id = ? GROUP BY event_id ORDER BY r.updated_at DESC LIMIT 5', user['id'])
+      rows = db.xquery('SELECT event_id FROM reservations WHERE user_id = ? GROUP BY event_id ORDER BY updated_at DESC LIMIT 5', user['id'])
       recent_events = rows.map do |row|
         event = get_event(row['event_id'])
         event['sheets'].each { |_, sheet| sheet.delete('detail') }
