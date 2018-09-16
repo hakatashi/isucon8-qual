@@ -1,14 +1,14 @@
 CREATE TABLE IF NOT EXISTS users (
     id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    nickname    VARCHAR(128) NOT NULL,
-    login_name  VARCHAR(128) NOT NULL,
-    pass_hash   VARCHAR(128) NOT NULL,
+    nickname    CHAR(128) NOT NULL,
+    login_name  CHAR(128) NOT NULL,
+    pass_hash   CHAR(128) NOT NULL,
     UNIQUE KEY login_name_uniq (login_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS events (
     id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    title       VARCHAR(128)     NOT NULL,
+    title       CHAR(128)     NOT NULL,
     public_fg   TINYINT(1)       NOT NULL,
     closed_fg   TINYINT(1)       NOT NULL,
     price       INTEGER UNSIGNED NOT NULL
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS sheetstates (
 CREATE TABLE IF NOT EXISTS sheetcounts (
     id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     event_id    INTEGER UNSIGNED NOT NULL,
-    `rank`      VARCHAR(128)     NOT NULL,
+    `rank`      CHAR(4)     NOT NULL,
     count       INTEGER UNSIGNED NOT NULL,
     INDEX `event_id_idx` (`event_id`),
     INDEX `rank_idx` (`rank`),
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS sheetcounts (
 
 CREATE TABLE IF NOT EXISTS sheets (
     id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    `rank`      VARCHAR(128)     NOT NULL,
+    `rank`      CHAR(4)     NOT NULL,
     num         INTEGER UNSIGNED NOT NULL,
     price       INTEGER UNSIGNED NOT NULL,
     UNIQUE KEY rank_num_uniq (`rank`, num),
@@ -64,8 +64,8 @@ CREATE TABLE IF NOT EXISTS reservations (
 
 CREATE TABLE IF NOT EXISTS administrators (
     id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    nickname    VARCHAR(128) NOT NULL,
-    login_name  VARCHAR(128) NOT NULL,
-    pass_hash   VARCHAR(128) NOT NULL,
+    nickname    CHAR(128) NOT NULL,
+    login_name  CHAR(128) NOT NULL,
+    pass_hash   CHAR(128) NOT NULL,
     UNIQUE KEY login_name_uniq (login_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
