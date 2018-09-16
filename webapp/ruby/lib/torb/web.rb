@@ -349,6 +349,7 @@ module Torb
         begin
           now = Time.now.utc.strftime('%F %T.%6N')
           db.xquery('INSERT INTO reservations (event_id, sheet_id, user_id, reserved_at, updated_at) VALUES (?, ?, ?, ?, ?)', event['id'], sheet['id'], user['id'], now, now)
+          reservation_id = db.last_id
           sql = <<-SQL
             INSERT IGNORE INTO sheetstates (
               event_id,
