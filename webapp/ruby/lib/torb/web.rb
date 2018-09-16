@@ -75,9 +75,7 @@ module Torb
         db.query('BEGIN')
         begin
           events = db.query('SELECT * FROM events ORDER BY id ASC').select(&where)
-          p events
           event_data = events.map do |event|
-            p event
             event['total']   = 0
             event['remains'] = 0
             event['sheets'] = {}
