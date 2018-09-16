@@ -83,14 +83,14 @@ module Torb
         begin
           p({ start: Time.now })
           events = db.query('SELECT * FROM events ORDER BY id ASC').select(&where)
-          p events.size
-          sql = <<-SQL
-            SELECT *
-            FROM sheetstates
-            WHERE event_id IN (?)
-          SQL
-          states = db.xquery(sql, [if events.size == 0 then -999999 else events.map { |e| e['id'] } end]).to_a
-          p states.size
+          if events.size > 5
+            sql = <<-SQL
+              SELECT *
+              FROM sheetstates
+              WHERE event_id IN (?)
+            SQL
+            states = db.xquery(sql, [if events.size == 0 then -999999 else events.map { |e| e['id'] } end]).to_a
+          end
           p({ fetch: Time.now })
           event_data = events.map do |event|
             event['total']   = 0
@@ -98,6 +98,14 @@ module Torb
             event['sheets'] = {}
             %w[S A B C].each do |rank|
               event['sheets'][rank] = { 'total' => 0, 'remains' => 0, 'detail' => [] }
+            end
+            if events.size >= 5
+              sql = <<-SQL
+                SELECT *
+                FROM sheetstates
+                WHERE event_id = ?
+              SQL
+              states = db.xquery(sql, event['id']).to_a
             end
 
             SHEETS.each_with_index do |sheet_data, index|
