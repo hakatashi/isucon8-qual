@@ -109,23 +109,16 @@ module Torb
         SQL
         reservations = db.xquery(sql, event['id']).to_a
         SHEETS.each_with_index do |rank, index|
-          p 'hoge'
           sheet_id = index + 1
-          p 'fuga'
           sheet = {
             'price' => PRICES[rank],
             'rank' => rank,
           }
-          p 'piyo'
           event['sheets'][sheet['rank']]['price'] ||= event['price'] + sheet['price']
-          p 'aaa'
           event['total'] += 1
-          p 'bbb'
           event['sheets'][sheet['rank']]['total'] += 1
-          p 'ccc'
 
           reservation = reservations.detect { |r| r['sheet_id'] == sheet_id }
-          p reservation
           if reservation
             sheet['mine']        = true if login_user_id && reservation['user_id'] == login_user_id
             sheet['reserved']    = true
