@@ -20,10 +20,21 @@ CREATE TABLE IF NOT EXISTS sheetstates (
     sheet_id    INTEGER UNSIGNED NOT NULL,
     user_id     INTEGER UNSIGNED NOT NULL,
     reserved_at DATETIME(6)      NOT NULL,
+    UNIQUE KEY event_sheet_id_uniq (event_id, sheet_id),
     INDEX `event_id_idx` (`event_id`),
     INDEX `sheet_id_idx` (`sheet_id`),
     INDEX `user_id_idx` (`user_id`),
     INDEX `reserved_at_idx` (`reserved_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS sheetcounts (
+    id          INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    event_id    INTEGER UNSIGNED NOT NULL,
+    `rank`      VARCHAR(128)     NOT NULL,
+    count       INTEGER UNSIGNED NOT NULL,
+    INDEX `event_id_idx` (`event_id`),
+    INDEX `rank_idx` (`rank`),
+    INDEX `count_idx` (`count`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS sheets (
