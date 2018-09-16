@@ -75,13 +75,16 @@ module Torb
         db.query('BEGIN')
         begin
           events = db.query('SELECT * FROM events ORDER BY id ASC').select(&where)
+          p events
           event_data = events.map do |event|
+            p event
             event['total']   = 0
             event['remains'] = 0
             event['sheets'] = {}
             %w[S A B C].each do |rank|
               event['sheets'][rank] = { 'total' => 0, 'remains' => 0, 'detail' => [] }
             end
+            p 'a'
 
             sql = <<-SQL
               SELECT *
@@ -89,6 +92,7 @@ module Torb
               WHERE event_id = ?
             SQL
             states = db.xquery(sql, event['id']).to_a
+            p 'b'
             SHEETS.each_with_index do |sheet_data, index|
               sheet_id = index + 1
               sheet = {
@@ -116,13 +120,16 @@ module Torb
               sheet.delete('price')
               sheet.delete('rank')
             end
+            p 'c'
 
             event['public'] = event.delete('public_fg')
             event['closed'] = event.delete('closed_fg')
 
             event['sheets'].each { |sheet| sheet.delete('detail') }
+            p 'd'
             event
           end
+          p 'e'
           db.query('COMMIT')
         rescue
           db.query('ROLLBACK')
