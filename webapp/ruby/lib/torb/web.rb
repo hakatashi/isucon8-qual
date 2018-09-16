@@ -94,16 +94,20 @@ module Torb
             SHEETS.each_with_index do |sheet_data, index|
               p sheet_data, index
               sheet_id = index + 1
+              p 'a'
               sheet = {
                 'price' => PRICES[sheet_data[:rank]],
                 'rank' => sheet_data[:rank],
                 'num' => sheet_data[:num],
               }
+              p 'b'
               event['sheets'][sheet['rank']]['price'] ||= event['price'] + sheet['price']
               event['total'] += 1
               event['sheets'][sheet['rank']]['total'] += 1
+              p 'c'
 
               state = states.detect { |r| r['sheet_id'] == sheet_id }
+              p 'd'
               if state
                 sheet['mine']        = true if login_user_id && state['user_id'] == login_user_id
                 sheet['reserved']    = true
@@ -112,12 +116,15 @@ module Torb
                 event['remains'] += 1
                 event['sheets'][sheet['rank']]['remains'] += 1
               end
+              p 'e'
 
               event['sheets'][sheet['rank']]['detail'].push(sheet)
 
+              p 'f'
               sheet.delete('id')
               sheet.delete('price')
               sheet.delete('rank')
+              p 'g'
             end
             p 'c'
 
