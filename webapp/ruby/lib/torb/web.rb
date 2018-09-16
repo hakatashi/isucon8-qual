@@ -347,7 +347,17 @@ module Torb
         halt_with_error 409, 'sold_out' unless sheet
         db.query('BEGIN')
         begin
-          db.xquery('INSERT INTO reservations (event_id, sheet_id, user_id, reserved_at, updated_at) VALUES (?, ?, ?, ?, ?)', event['id'], sheet['id'], user['id'], Time.now.utc.strftime('%F %T.%6N'), Time.now.utc.strftime('%F %T.%6N'))
+          now = Time.now.utc.strftime('%F %T.%6N')
+          db.xquery('INSERT INTO reservations (event_id, sheet_id, user_id, reserved_at, updated_at) VALUES (?, ?, ?, ?, ?)', event['id'], sheet['id'], user['id'], now, now)
+          sql = <<-SQL
+            INSERT IGNORE INTO sheetstates (
+              event_id,
+              sheet_id,
+              user_id,
+              reserved_at
+            ) VALUES (?, ?, ?, ?)
+          SQL
+          db.xquery(sql, event['id'], sheet['id'], user['id'], now)
           reservation_id = db.last_id
           db.query('COMMIT')
         rescue => e
@@ -386,6 +396,12 @@ module Torb
         end
 
         db.xquery('UPDATE reservations SET canceled_at = ?, updated_at = ? WHERE id = ?', Time.now.utc.strftime('%F %T.%6N'), Time.now.utc.strftime('%F %T.%6N'), reservation['id'])
+        sql = <<-SQL
+          DELETE FROM sheetstates
+          WHERE event_id = ?
+            AND sheet_id = ?
+        SQL
+        db.xquery(sql, event['id'], sheet_id)
         db.query('COMMIT')
       rescue => e
         warn "rollback by: #{e}"
@@ -529,7 +545,7 @@ module Torb
       (s.price + e.price) AS price,
       r.user_id AS user_id,
       DATE_FORMAT(r.reserved_at, '%Y-%m-%dT%TZ') AS sold_at,
-      IFNULL(DATE_FORMAT(r.canceled_at, '%Y-%m-%dT%TZ'), '') AS canceled_at      
+      IFNULL(DATE_FORMAT(r.canceled_at, '%Y-%m-%dT%TZ'), '') AS canceled_at
       INTO OUTFILE '/usr/share/nginx/html/csv/#{prefix}.csv' FIELDS TERMINATED BY ','
       FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY r.id ASC LOCK IN SHARE MODE);
       SQL

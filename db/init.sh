@@ -9,13 +9,12 @@ export MYSQL_PWD=isucon
 mysql -uisucon -h 172.17.147.2 -e "DROP DATABASE IF EXISTS torb; CREATE DATABASE torb;"
 mysql -uisucon -h 172.17.147.2 torb < "$DB_DIR/schema.sql"
 
-if [ ! -f "$DB_DIR/isucon8q-initial-dataset.sql.gz" ]; then
+if [ ! -f "$DB_DIR/dump.sql.gz" ]; then
   echo "Run the following command beforehand." 1>&2
   echo "$ ( cd \"$BENCH_DIR\" && bin/gen-initial-dataset )" 1>&2
   exit 1
 fi
 
 mysql -uisucon -h 172.17.147.2 torb -e 'ALTER TABLE reservations DROP KEY event_id_and_sheet_id_idx'
-gzip -dc "$DB_DIR/isucon8q-initial-dataset.sql.gz" | mysql -uisucon -h 172.17.147.2 torb
+gzip -dc "$DB_DIR/dump.sql.gz" | mysql -uisucon -h 172.17.147.2 torb
 mysql -uisucon -h 172.17.147.2 torb -e 'ALTER TABLE reservations ADD KEY event_id_and_sheet_id_idx (event_id, sheet_id)'
-mysql -uisucon -h 172.17.147.2 torb -e 'UPDATE reservations SET updated_at = IFNULL(canceled_at, reserved_at)'
