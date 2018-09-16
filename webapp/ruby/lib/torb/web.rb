@@ -102,13 +102,10 @@ module Torb
 
         sql = <<-SQL
           SELECT *
-          FROM reservations
+          FROM sheetstates
           WHERE event_id = ?
-            AND canceled_at IS NULL
-          GROUP BY sheet_id
-            HAVING reserved_at = MIN(reserved_at)
         SQL
-        reservations = db.xquery(sql, event['id']).to_a
+        states = db.xquery(sql, event['id']).to_a
         SHEETS.each_with_index do |sheet_data, index|
           sheet_id = index + 1
           sheet = {
@@ -120,11 +117,11 @@ module Torb
           event['total'] += 1
           event['sheets'][sheet['rank']]['total'] += 1
 
-          reservation = reservations.detect { |r| r['sheet_id'] == sheet_id }
-          if reservation
-            sheet['mine']        = true if login_user_id && reservation['user_id'] == login_user_id
+          state = states.detect { |r| r['sheet_id'] == sheet_id }
+          if state
+            sheet['mine']        = true if login_user_id && state['user_id'] == login_user_id
             sheet['reserved']    = true
-            sheet['reserved_at'] = reservation['reserved_at'].to_i
+            sheet['reserved_at'] = state['reserved_at'].to_i
           else
             event['remains'] += 1
             event['sheets'][sheet['rank']]['remains'] += 1
