@@ -498,9 +498,7 @@ module Torb
     end
 
     get '/admin/api/reports/sales', admin_login_required: true do
-      reservations = db.query('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.id AS event_id, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY id ASC LOCK IN SHARE MODE')
-      #prefix = Digest::MD5.hexdigest(Time.now.to_s)
-=begin
+      prefix = Digest::MD5.hexdigest(Time.now.to_s)
       db.query(<<-SQL
       (SELECT 'reservation_id','event_id','rank','num',
       'price','user_id','sold_at','canceled_at')
@@ -516,7 +514,9 @@ module Torb
       FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY r.id ASC LOCK IN SHARE MODE);
       SQL
       )
-=end      
+      redirect "http://118.27.29.167/csv/#{prefix}.csv", 307
+=begin
+      reservations = db.query('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.id AS event_id, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY id ASC LOCK IN SHARE MODE')
       reports = reservations.map do |reservation|
         {
           reservation_id: reservation['id'],
@@ -529,8 +529,8 @@ module Torb
           price:          reservation['event_price'] + reservation['sheet_price'],
         }
       end
-      #redirect "http://118.27.29.167/csv/#{prefix}.csv"
       render_report_csv(reports)
+=end
     end
   end
 end
