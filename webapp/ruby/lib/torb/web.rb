@@ -4,6 +4,7 @@ require 'erubi'
 require 'mysql2'
 require 'mysql2-cs-bind'
 require 'digest/md5'
+require 'securerandom'
 
 SHEETS = [
   *(['S'] * 50).each_with_index.map { |rank, index| {rank: rank, num: index + 1} },
@@ -498,7 +499,7 @@ module Torb
     end
 
     get '/admin/api/reports/sales', admin_login_required: true do
-      prefix = Digest::MD5.hexdigest(Time.now.to_s)
+      prefix = SecureRandom.uuid
       db.query(<<-SQL
       (SELECT 'reservation_id','event_id','rank','num',
       'price','user_id','sold_at','canceled_at')
