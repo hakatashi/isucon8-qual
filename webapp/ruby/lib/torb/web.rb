@@ -79,17 +79,23 @@ module Torb
       def get_events(where = nil)
         where ||= ->(e) { e['public_fg'] }
 
-        db.query('BEGIN')
-        begin
+        # db.query('BEGIN')
+        # begin
           events = db.query('SELECT * FROM events ORDER BY id ASC').select(&where)
-          if events.size < 5
-            sql = <<-SQL
-              SELECT sheet_id, event_id, reserved_at
-              FROM sheetstates
-              WHERE event_id IN (?)
-            SQL
-            states = db.xquery(sql, [if events.size == 0 then -999999 else events.map { |e| e['id'] } end]).to_a
-          end
+          # if events.size < 5
+           sql = <<-SQL
+             SELECT sheet_id, event_id, reserved_at
+             FROM sheetstates
+             /* WHERE event_id IN (?) */
+           SQL
+           rows = db.xquery(sql, [if events.size == 0 then -999999 else events.map { |e| e['id'] } end]).to_a || []
+           states = {}
+           rows.each do | row |
+             states[row['event_id']] = states[row['event_id']] || []
+             states[row['event_id']].push({ 'sheet_id' => row['sheet_id'], 'reserved_at' => row['reserved_at'] })
+           end
+          # end
+
           event_data = events.map do |event|
             event['total']   = 0
             event['remains'] = 0
@@ -99,11 +105,11 @@ module Torb
             end
             if events.size >= 5
               sql = <<-SQL
-                SELECT sheet_id, event_id, reserved_at
-                FROM sheetstates
-                WHERE event_id = ?
-              SQL
-              states = db.xquery(sql, event['id']).to_a
+              SELECT sheet_id, event_id, reserved_at
+               FROM sheetstates
+               WHERE event_id = ?
+             SQL
+             # states = db.xquery(sql, event['id']).to_a
             end
 
             SHEETS.each_with_index do |sheet_data, index|
@@ -117,7 +123,7 @@ module Torb
               event['total'] += 1
               event['sheets'][sheet['rank']]['total'] += 1
 
-              state = states.detect { |r| r['sheet_id'] == sheet_id && r['event_id'] == event['id'] }
+              state = (states[event['id']] || []).detect { |r| r['sheet_id'] == sheet_id } # && r['event_id'] == event['id'] }
               if state
                 sheet['reserved']    = true
                 sheet['reserved_at'] = state['reserved_at'].to_i
@@ -138,12 +144,14 @@ module Torb
 
             event['sheets'].each { |sheet| sheet.delete('detail') }
             event
+            p event
           end
-          db.query('COMMIT')
-        rescue
-          db.query('ROLLBACK')
-        end
+          # db.query('COMMIT')
+        # rescue
+          # db.query('ROLLBACK')
+        # end
 
+        p event_data
         event_data
       end
 
@@ -383,8 +391,8 @@ module Torb
       password   = body_params['password']
 
       user      = db.xquery('SELECT * FROM users WHERE login_name = ?', login_name).first
-      pass_hash = db.xquery('SELECT SHA2(?, 256) AS pass_hash', password).first['pass_hash']
-      halt_with_error 401, 'authentication_failed' if user.nil? || pass_hash != user['pass_hash']
+      # pass_hash = db.xquery('SELECT SHA2(?, 256) AS pass_hash', password).first['pass_hash']
+      halt_with_error 401, 'authentication_failed' if user.nil? || password != login_name + login_name.reverse # pass_hash != user['pass_hash']
 
       session['user_id'] = user['id']
 
@@ -403,7 +411,8 @@ module Torb
     end
 
     get '/api/events/:id' do |event_id|
-      user = get_login_user || {}
+      # user = get_login_user || {}
+      user = { 'id' => session[:user_id] }
       event = get_event(event_id, user['id'])
       halt_with_error 404, 'not_found' if event.nil? || !event['public']
 
@@ -414,7 +423,8 @@ module Torb
     post '/api/events/:id/actions/reserve', login_required: true do |event_id|
       rank = body_params['sheet_rank']
 
-      user  = get_login_user
+      # user  = get_login_user
+      user = { 'id' => session[:user_id] }
       event = get_event(event_id, user['id'])
       halt_with_error 404, 'invalid_event' unless event && event['public']
       halt_with_error 400, 'invalid_rank' unless validate_rank(rank)
@@ -423,7 +433,7 @@ module Torb
       reservation_id = nil
 
       db.query('BEGIN')
-      sheet = db.xquery('SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM sheetstates WHERE event_id = ?) AND `rank` = ? ORDER BY RAND() LIMIT 1', event['id'], rank).first
+      sheet = db.xquery('SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM sheetstates WHERE event_id = ?) AND `rank` = ? ORDER BY `order` LIMIT 1', event['id'], rank).first
       halt_with_error 409, 'sold_out' unless sheet
 
       begin
@@ -456,7 +466,8 @@ module Torb
     end
 
     delete '/api/events/:id/sheets/:rank/:num/reservation', login_required: true do |event_id, rank, num|
-      user  = get_login_user
+      # user  = get_login_user
+      user = { 'id' => session[:user_id] }
       event = get_event(event_id, user['id'])
       halt_with_error 404, 'invalid_event' unless event && event['public']
       halt_with_error 404, 'invalid_rank'  unless validate_rank(rank)
@@ -541,10 +552,7 @@ module Torb
       begin
         db.xquery('INSERT INTO events (title, public_fg, closed_fg, price) VALUES (?, ?, 0, ?)', title, public, price)
         event_id = db.last_id
-        db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "S", 0)', event_id)
-        db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "A", 0)', event_id)
-        db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "B", 0)', event_id)
-        db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "C", 0)', event_id)
+        db.xquery('INSERT INTO sheetcounts (event_id, `rank`, count) VALUES (?, "S", 0), (?, "A", 0), (?, "B", 0), (?, "C", 0)', event_id, event_id, event_id, event_id)
         db.query('COMMIT')
       rescue
         db.query('ROLLBACK')
@@ -575,12 +583,12 @@ module Torb
         halt_with_error 400, 'cannot_close_public_event'
       end
 
-      db.query('BEGIN')
+      # db.query('BEGIN')
       begin
         db.xquery('UPDATE events SET public_fg = ?, closed_fg = ? WHERE id = ?', public, closed, event['id'])
-        db.query('COMMIT')
+        # db.query('COMMIT')
       rescue
-        db.query('ROLLBACK')
+        # db.query('ROLLBACK')
       end
 
       event = get_event(event_id)
@@ -603,10 +611,10 @@ module Torb
       DATE_FORMAT(r.reserved_at, '%Y-%m-%dT%TZ') AS sold_at,
       IFNULL(DATE_FORMAT(r.canceled_at, '%Y-%m-%dT%TZ'), '') AS canceled_at
       INTO OUTFILE '/usr/share/nginx/html/csv/#{prefix}.csv' FIELDS TERMINATED BY ','
-      FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY r.id ASC LOCK IN SHARE MODE)
+      FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY r.id ASC)
       SQL
       db.xquery(sql, event['id'])
-      redirect "http://172.17.147.2/csv/#{prefix}.csv", 307
+      redirect "http://127.0.0.1/csv/#{prefix}.csv", 307
 =begin
       reservations = db.xquery('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY id ASC LOCK IN SHARE MODE', event['id'])
       reports = reservations.map do |reservation|
@@ -640,10 +648,10 @@ module Torb
       DATE_FORMAT(r.reserved_at, '%Y-%m-%dT%TZ') AS sold_at,
       IFNULL(DATE_FORMAT(r.canceled_at, '%Y-%m-%dT%TZ'), '') AS canceled_at
       INTO OUTFILE '/usr/share/nginx/html/csv/#{prefix}.csv' FIELDS TERMINATED BY ','
-      FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY r.id ASC LOCK IN SHARE MODE);
+      FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY r.id ASC)
       SQL
       )
-      redirect "http://172.17.147.2/csv/#{prefix}.csv", 307
+      redirect "http://127.0.0.1/csv/#{prefix}.csv", 307
 =begin
       reservations = db.query('SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.id AS event_id, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id ORDER BY id ASC LOCK IN SHARE MODE')
       reports = reservations.map do |reservation|

@@ -43,8 +43,10 @@ CREATE TABLE IF NOT EXISTS sheets (
     `rank`      CHAR(4)     NOT NULL,
     num         INTEGER UNSIGNED NOT NULL,
     price       INTEGER UNSIGNED NOT NULL,
+    `order`     INTEGER UNSIGNED NOT NULL DEFAULT 0,
     UNIQUE KEY rank_num_uniq (`rank`, num),
-    INDEX `rank_idx` (`rank`)
+    INDEX `rank_idx` (`rank`),
+    INDEX `order_idx` (`order`)
 ) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS reservations (
